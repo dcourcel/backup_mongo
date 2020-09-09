@@ -54,7 +54,7 @@ echo 'Begin Mongo backup.'
 # Create directory if it doesn't exist.
 mkdir -p /media/backup/$BACKUP_FOLDER
 # Backup the databases specified
-BACKUP_FILE=/media/backup/$BACKUP_FOLDER/${ARCHIVE_NAME}_$(date +%Y-%m-%d_%H-%M-%S).bz2
+BACKUP_FILE=/media/backup/$BACKUP_FOLDER/${ARCHIVE_NAME}_$(date +%Y-%m-%d_%H-%M-%S).bson.bz2
 mongodump --host=$MONGO_HOST --db=$DB_NAME --archive | bzip2 -cz9 > $BACKUP_FILE &
 # The process is started in background and we wait for its completion. This allow the script to treat a signal
 # immediatly instead of waiting for the end of the command.
