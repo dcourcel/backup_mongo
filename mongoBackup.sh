@@ -25,28 +25,33 @@ if [ -n "$1" ]; then
 fi
 
 # Verify if arguments exist
+ERR=0
 if [ -z "$DB_NAME" ]; then
     echo 'Error. No Database name specified.'
-    exit 3
+    ERR=1
 fi
 if [ -z "$MONGO_HOST" ]; then
     echo 'Error. No host specified.'
-    exit 3
+    ERR=1
 fi
 if [ -z "$BACKUP_FOLDER" ]; then
     echo 'Error. No backup folder specified.'
-    exit 3
+    ERR=1
 fi
 if [ -z "$ARCHIVE_NAME" ]; then
     echo 'Error. No archive name specified.'
-    exit 3
+    ERR=1
 fi
 
 # Verify if backup volume exist.
 if [ ! -d /media/backup ]; then
     echo 'Error: /media/backup is not a directory. A volume should be mounted at that location.'
-    exit 3
+    ERR=1
 fi
+
+if [ $ERR = 1 ]; then
+     exit 3
+fi;
 
 echo '----------------------------------------'
 echo 'Begin Mongo backup.'
