@@ -6,16 +6,16 @@ function cleanup()
 {
     # Kill the background task if it exists before removing the backup file
     kill %1 2> /dev/null
-    if [ -f $BACKUP_FILE ]; then
-        rm -f $BACKUP_FILE
+    if [ -f "$BACKUP_FILE" ]; then
+        rm -f "$BACKUP_FILE"
     fi
-    exit 2
+    exit 3
 }
 
 trap 'cleanup' SIGINT
 trap 'cleanup' SIGTERM
 
-# Read parameters from command line if there are at least one parameters.
+# Read parameters from command line if there is at least one parameter.
 # Otherwise, the environment variables are assumed to be already defined.
 if [ -n "$1" ]; then
     DB_NAME="$1"
@@ -50,25 +50,26 @@ if [ ! -d /media/backup ]; then
 fi
 
 if [ $ERR = 1 ]; then
-     exit 3
+     exit 1
 fi;
 
 echo '----------------------------------------'
 echo 'Begin Mongo backup.'
 
 # Create directory if it doesn't exist.
-mkdir -p /media/backup/$BACKUP_FOLDER
+mkdir -p /media/backup/$BACKUP_FOLDER &&
 # Backup the databases specified
-BACKUP_FILE=/media/backup/$BACKUP_FOLDER/${ARCHIVE_NAME}_$(date +%Y-%m-%d_%H-%M-%S).bson.bz2
+BACKUP_FILE=/media/backup/$BACKUP_FOLDER/${ARCHIVE_NAME}_$(date +%Y-%m-%d_%H-%M-%S).bson.bz2 &&
 mongodump --host=$MONGO_HOST --db=$DB_NAME --archive | bzip2 -cz9 > $BACKUP_FILE &
 # The process is started in background and we wait for its completion. This allow the script to treat a signal
 # immediatly instead of waiting for the end of the command.
 wait $!
 
 ERR_CODE="$?"
-if [ "$ERR_CODE" != 0 ]; then
-    echo "Mongo backup failed with error code $ERR_CODE"
-else
+if [ $ERR_CODE -eq 0 ]; then
     echo 'Mongo backup completed.'
+else
+    echo "Mongo backup failed with error code $ERR_CODE"
 fi
 echo -e '----------------------------------------\n'
+exit $ERR_CODE
