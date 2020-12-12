@@ -22,6 +22,7 @@ if [ -n "$1" ]; then
     MONGO_HOST="$2"
     BACKUP_FOLDER="$3"
     ARCHIVE_NAME="$4"
+    DATE_DIR_FILE="$5"
 fi
 
 # Verify if arguments exist
@@ -49,6 +50,24 @@ if [ ! -d /media/backup ]; then
     ERR=1
 fi
 
+if [ -n "$DATE_DIR_FILE" ]; then
+    if [ ! -f "$DATE_DIR_FILE" ]; then
+        echo "\$DATE_DIR_FILE ($DATE_DIR_FILE) is not a file."
+        ERR=1
+    fi
+    date_dir=$(head -n 1 $DATE_DIR_FILE)
+    if [ -z "$date_dir" ]; then
+        echo "The file $DATE_DIR_FILE is empty."
+        ERR=1
+    fi
+else
+    date_dir=$(date +%Y-%m-%d_%H-%M-%S)
+fi;
+if ! mkdir -p /media/backup/$BACKUP_FOLDER/$date_dir; then
+    echo "Cannot create directory /media/backup/$BACKUP_FOLDER/$date_dir"
+    ERR=1
+fi
+
 if [ $ERR = 1 ]; then
      exit 1
 fi;
@@ -56,10 +75,8 @@ fi;
 echo '----------------------------------------'
 echo 'Begin Mongo backup.'
 
-# Create directory if it doesn't exist.
-mkdir -p /media/backup/$BACKUP_FOLDER &&
 # Backup the databases specified
-BACKUP_FILE=/media/backup/$BACKUP_FOLDER/${ARCHIVE_NAME}_$(date +%Y-%m-%d_%H-%M-%S).bson.bz2 &&
+BACKUP_FILE=/media/backup/$BACKUP_FOLDER/$date_dir/$ARCHIVE_NAME.bson.bz2
 mongodump --host=$MONGO_HOST --db=$DB_NAME --archive | bzip2 -cz9 > $BACKUP_FILE &
 # The process is started in background and we wait for its completion. This allow the script to treat a signal
 # immediatly instead of waiting for the end of the command.
